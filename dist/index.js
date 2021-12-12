@@ -38830,7 +38830,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.upload = void 0;
-const fs_1 = __importDefault(__webpack_require__(747));
 const qiniu_1 = __importDefault(__webpack_require__(161));
 const path_1 = __importDefault(__webpack_require__(622));
 const glob_1 = __importDefault(__webpack_require__(402));
@@ -38843,19 +38842,17 @@ function upload(token, srcDir, destDir, ignoreSourceMap, onProgress, onComplete,
     const baseDir = path_1.default.resolve(process.cwd(), srcDir);
     const files = glob_1.default.sync(`${baseDir}/**/*`, { nodir: true });
     const config = new qiniu_1.default.conf.Config();
-    const uploader = new qiniu_1.default.resume_up.ResumeUploader(config);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // @ts-ignore
+    config.zone = qiniu_1.default.zone.Zone_na0;
+    const uploader = new qiniu_1.default.form_up.FormUploader(config);
     const tasks = files.map((file) => {
         const relativePath = path_1.default.relative(baseDir, path_1.default.dirname(file));
         const key = normalizePath(path_1.default.join(destDir, relativePath, path_1.default.basename(file)));
         if (ignoreSourceMap && file.endsWith('.map'))
             return null;
         const task = () => new Promise((resolve, reject) => {
-            const putExtra = new qiniu_1.default.resume_up.PutExtra();
-            const progressRecordPath = path_1.default.resolve(process.cwd(), `progress.${path_1.default.basename(file)}.log`);
-            fs_1.default.closeSync(fs_1.default.openSync(progressRecordPath, 'w'));
-            putExtra.version = 'v2';
-            putExtra.partSize = 4 * 1024 * 1024;
-            putExtra.resumeRecordFile = progressRecordPath;
+            const putExtra = new qiniu_1.default.form_up.PutExtra();
             uploader.putFile(token, key, file, putExtra, (err, body, info) => {
                 if (err)
                     return reject(new Error(`Upload failed: ${file}`));
