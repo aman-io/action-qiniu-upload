@@ -38830,6 +38830,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.upload = void 0;
+const fs_1 = __importDefault(__webpack_require__(747));
 const qiniu_1 = __importDefault(__webpack_require__(161));
 const path_1 = __importDefault(__webpack_require__(622));
 const glob_1 = __importDefault(__webpack_require__(402));
@@ -38850,9 +38851,11 @@ function upload(token, srcDir, destDir, ignoreSourceMap, onProgress, onComplete,
             return null;
         const task = () => new Promise((resolve, reject) => {
             const putExtra = new qiniu_1.default.resume_up.PutExtra();
+            const progressRecordPath = path_1.default.resolve(process.cwd(), `progress.${path_1.default.basename(file)}.log`);
+            fs_1.default.closeSync(fs_1.default.openSync(progressRecordPath, 'w'));
             putExtra.version = 'v2';
             putExtra.partSize = 4 * 1024 * 1024;
-            putExtra.resumeRecordFile = `progress.${path_1.default.basename(file)}.log`;
+            putExtra.resumeRecordFile = progressRecordPath;
             uploader.putFile(token, key, file, putExtra, (err, body, info) => {
                 if (err)
                     return reject(new Error(`Upload failed: ${file}`));
