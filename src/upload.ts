@@ -21,7 +21,7 @@ export function upload(
   const files = glob.sync(`${baseDir}/**/*`, { nodir: true });
 
   const config = new qiniu.conf.Config();
-  const uploader = new qiniu.form_up.FormUploader(config);
+  const uploader = new qiniu.resume_up.ResumeUploader(config);
 
   const tasks = files.map((file) => {
     const relativePath = path.relative(baseDir, path.dirname(file));
@@ -30,7 +30,11 @@ export function upload(
     if (ignoreSourceMap && file.endsWith('.map')) return null;
 
     const task = (): Promise<any> => new Promise((resolve, reject) => {
-      const putExtra = new qiniu.form_up.PutExtra();
+      const putExtra = new qiniu.resume_up.PutExtra();
+      putExtra.version = 'v2';
+      putExtra.partSize = 4 * 1024 * 1024;
+      putExtra.resumeRecordFile = `progress.${path.basename(file)}.log`;
+
       uploader.putFile(token, key, file, putExtra, (err, body, info) => {
         if (err) return reject(new Error(`Upload failed: ${file}`));
 
