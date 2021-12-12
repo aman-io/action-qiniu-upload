@@ -1,3 +1,4 @@
+import fs from 'fs';
 import qiniu from 'qiniu';
 import path from 'path';
 import glob from 'glob';
@@ -31,9 +32,12 @@ export function upload(
 
     const task = (): Promise<any> => new Promise((resolve, reject) => {
       const putExtra = new qiniu.resume_up.PutExtra();
+      const progressRecordPath = path.resolve(process.cwd(), `progress.${path.basename(file)}.log`);
+      fs.closeSync(fs.openSync(progressRecordPath, 'w'));
+
       putExtra.version = 'v2';
       putExtra.partSize = 4 * 1024 * 1024;
-      putExtra.resumeRecordFile = `progress.${path.basename(file)}.log`;
+      putExtra.resumeRecordFile = progressRecordPath;
 
       uploader.putFile(token, key, file, putExtra, (err, body, info) => {
         if (err) return reject(new Error(`Upload failed: ${file}`));
